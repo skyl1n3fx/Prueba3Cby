@@ -1,0 +1,50 @@
+-----------------------------
+-- 1.
+-----------------------------
+
+CREATE OR REPLACE VIEW V_COMISION_FACTURAS AS 
+    SELECT initcap(e.nombre || ' ' || e.apellido) AS "NOMBRE EMPLEADO", count(f.nro_factura) AS "CANT. FACTURAS EMITIDAS", 
+                COUNT(c.nro_factura) AS "CANT. FACTURAS CON COMISION",  TO_CHAR(NVL(sum(c.monto_comision),0),'$999G999G999') AS "TOTAL COMISION",
+                TO_CHAR(e.sueldo,'$999G999G999') as "SUELDO", TO_CHAR(NVL(sum(c.monto_comision),0) + e.sueldo,'$999G999G999') AS "SUELDO CON MÁS COMISION"
+                FROM empleado e
+                INNER JOIN factura f
+                ON e.rut_empleado = f.rut_empleado
+                LEFT JOIN comision_ventas c
+                ON f.nro_factura = c.nro_factura
+                GROUP BY  e.nombre || ' ' || e.apellido, e.sueldo
+                order by "NOMBRE EMPLEADO" asc
+                WITH READ ONLY CONSTRAINT CONTROL_COMISION;
+                
+                
+                
+                
+SELECT * FROM V_COMISION_FACTURAS;
+
+-----------------------------
+-- 2.
+-----------------------------
+
+CREATE OR REPLACE VIEW V_INTERES_FACTURA AS 
+        SELECT initcap(c.nombre_cliente || ' ' || c.apellido_cliente) AS "NOMBRE",
+        f.nro_factura AS "NUMERO FACTURA",COUNT(c.nro_cuota) AS "CANTIDAD CUOTAS", 
+        TO_CHAR(f.monto_total,'$999G999G999') AS "TOTAL SIN INTERÉS", TO_CHAR(ROUND(c.valor_cuota * 0.05),'$999G999G999') AS "INTERES MENSUAL", 
+        TO_CHAR(f.monto_total +  ((c.valor_cuota * 0.05) * COUNT(c.nro_cuota)), '$999G999G999') AS "TOTAL A PAGAR"
+        FROM CLIENTE c
+        INNER JOIN factura f
+        ON c.id_cliente= f.id_cliente
+        INNER JOIN CUOTA c
+        ON f.nro_factura = c.nro_factura
+        GROUP BY c.nombre_cliente, c.apellido_cliente, f.nro_factura, f.monto_total, c.valor_cuota
+        ORDER BY "NOMBRE" ASC
+        WITH READ ONLY CONSTRAINT CONTROL_INTERES;
+        
+        
+                
+SELECT * FROM V_INTERES_FACTURA;
+
+
+-----------------------------
+-- 3.
+-----------------------------
+
+
